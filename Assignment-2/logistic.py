@@ -10,9 +10,8 @@ from matplotlib import cm
 #######################################################################
 # DO NOT MODIFY THE CODE BELOW 
 #######################################################################
-
 from copy import deepcopy
-np.set_printoptions(threshold=np.nan)
+# np.set_printoptions(threshold=np.nan)
 
 def binary_train(X, y, w0=None, b0=None, step_size=0.5, max_iterations=1000):
     """
@@ -52,10 +51,6 @@ def binary_train(X, y, w0=None, b0=None, step_size=0.5, max_iterations=1000):
         error = sigmoid(np.dot(w, X.T) + b) - y
         w -= step_size * np.sum(np.array([en * xn for en, xn in zip(error, X)]), axis = 0) / N
         b -= step_size * sum(error) / N
-
-    # print("w.shape:", w.shape)
-    # print("w:", w)
-    # print("b:", b)
 
     assert w.shape == (D,)
     return w, b
@@ -127,15 +122,11 @@ def multinomial_train(X, y, C,
     """
     y_i = np.zeros((N, C))
     y_i[np.arange(N), y] = 1
-    # print("y_i:", y_i)
     for i in range(max_iterations):
         for Xn, yn in zip(X, y_i):
             errors = softmax(np.dot(w, Xn) + b) - yn
             w -= step_size * np.array([error * Xn for error in errors])
             b -= step_size * errors
-    # print("w:", w)
-    # print("b:", b)
-    # print("y:", y)
 
     assert w.shape == (C, D)
     assert b.shape == (C,)
@@ -165,9 +156,7 @@ def multinomial_predict(X, w, b):
     TODO: add your code here
     """
     probs = np.array([softmax(np.dot(w, Xn) + b) for Xn in X])
-    # print("prob:", probs)
     preds = np.argmax(probs, axis = 1)
-    # print("preds:", preds)
 
     assert preds.shape == (N,)
     return preds
@@ -216,18 +205,12 @@ def OVR_train(X, y, C, w0=None, b0=None, step_size=0.5, max_iterations=1000):
         np.place(y_relabel, y_relabel == -1, 1)
         y_t.append(y_relabel)
     y_t = np.asarray(y_t)
-    # print("y:", y)
-    # print("y_t:", y_t)
 
     for k in range(C):
-    # for wk, bk, yk in zip(w, b, y_t):
         for i in range(max_iterations):
             error = sigmoid(np.dot(w[k], X.T) + b[k]) - y_t[k]
             w[k] -= step_size * np.sum(np.array([en * xn for en, xn in zip(error, X)]), axis = 0) / N
             b[k] -= step_size * sum(error) / N
-
-    # print("w:", w)
-
 
     assert w.shape == (C, D), 'wrong shape of weights matrix'
     assert b.shape == (C,), 'wrong shape of bias terms vector'
@@ -259,8 +242,6 @@ def OVR_predict(X, w, b):
     """
     preds_t = np.array([sigmoid(np.dot(w[k], X.T) + b[k]) for k in range(C)])
     preds = np.argmax(preds_t, axis = 0)
-    # print("preds_t:", preds_t)
-    # print("preds_t.shape:", preds_t.shape)
 
     assert preds.shape == (N,)
     return preds
