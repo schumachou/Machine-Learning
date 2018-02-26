@@ -10,7 +10,6 @@ from matplotlib import cm
 #######################################################################
 # DO NOT MODIFY THE CODE BELOW 
 #######################################################################
-from copy import deepcopy
 # np.set_printoptions(threshold=np.nan)
 
 def binary_train(X, y, w0=None, b0=None, step_size=0.5, max_iterations=1000):
@@ -199,11 +198,7 @@ def OVR_train(X, y, C, w0=None, b0=None, step_size=0.5, max_iterations=1000):
     # y_t: 1-of-k encoding for all classes
     y_t = []
     for i in range(C):
-        y_relabel = deepcopy(y)
-        np.place(y_relabel, y_relabel == i, -1)
-        np.place(y_relabel, y_relabel != -1, 0)
-        np.place(y_relabel, y_relabel == -1, 1)
-        y_t.append(y_relabel)
+        y_t.append(np.array(y == i).astype(int))
     y_t = np.asarray(y_t)
 
     for k in range(C):

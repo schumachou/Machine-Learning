@@ -14,7 +14,7 @@ import dnn_im2col
     ########################################################################################
     #   The following three modules (class) are what you need to complete  (check TODO)    #
     ########################################################################################
-
+# np.set_printoptions(threshold=np.nan)
 class linear_layer:
 
     """
@@ -65,6 +65,7 @@ class linear_layer:
         # TODO: Implement the linear forward pass. Store the result in forward_output  #
         ################################################################################
 
+        forward_output = np.matmul(X, self.params['W']) + self.params['b']
         return forward_output
 
     def backward(self, X, grad):
@@ -98,6 +99,9 @@ class linear_layer:
         # only return backward_output, but need to compute self.gradient['W'] and self.gradient['b']                             #
         ##########################################################################################################################
 
+        self.gradient['W'] = np.matmul(X.T, grad)
+        self.gradient['b'] = np.sum(grad, axis = 0)
+        backward_output = np.matmul(grad, self.params['W'].T)
         return backward_output
 
 
@@ -137,6 +141,8 @@ class relu:
         # TODO: Implement the relu forward pass. Store the result in forward_output    #
         ################################################################################
 
+        self.mask = np.array(X > 0).astype(int)
+        forward_output = np.maximum(X, 0)
         return forward_output
 
     def backward(self, X, grad):
@@ -167,6 +173,7 @@ class relu:
         # PLEASE follow the Heaviside step function defined in CSCI567_HW2.pdf                                                   #
         ##########################################################################################################################
 
+        backward_output = np.multiply(grad, self.mask)
         return backward_output
 
 
@@ -245,6 +252,7 @@ class dropout:
         # PLEASE follow the formula shown in the homework pdf                                                                    #
         ##########################################################################################################################
 
+        backward_output = np.multiply(grad, self.mask)
         return backward_output
 
 
