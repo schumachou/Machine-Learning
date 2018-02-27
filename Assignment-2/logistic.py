@@ -198,7 +198,7 @@ def OVR_train(X, y, C, w0=None, b0=None, step_size=0.5, max_iterations=1000):
     # y_t: 1-of-k encoding for all classes
     y_t = []
     for i in range(C):
-        y_t.append(np.array(y == i).astype(int))
+        y_t.append((y == i).astype(int))
     y_t = np.asarray(y_t)
 
     for k in range(C):
