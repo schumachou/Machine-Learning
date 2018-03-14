@@ -1,6 +1,6 @@
 import json
 import numpy as np
-
+# np.set_printoptions(threshold = np.nan)
 
 ###### Q1.1 ######
 def objective_function(X, y, w, lamb):
@@ -16,6 +16,8 @@ def objective_function(X, y, w, lamb):
     """
     # you need to fill in your solution here
 
+    N = X.shape[0]
+    obj_value = lamb / 2 * np.linalg.norm(w) ** 2 + (np.sum(np.maximum(0, 1 - y.reshape(N, 1) * np.matmul(X, w))) / N)
 
     return obj_value
 
@@ -45,9 +47,13 @@ def pegasos_train(Xtrain, ytrain, w, lamb, k, max_iterations):
 
     for iter in range(1, max_iterations + 1):
         A_t = np.floor(np.random.rand(k) * N).astype(int)  # index of the current mini-batch
-
         # you need to fill in your solution here
 
+        A_t_plus = (ytrain[A_t].reshape(k,1) * np.matmul(Xtrain[A_t], w) < 1).astype(int)
+        eta_t = 1 / (lamb * iter)
+        w_half = (1 - eta_t * lamb) * w + np.sum(A_t_plus * (ytrain[A_t].reshape(k,1) * Xtrain[A_t]), axis = 0).reshape(D,1) * eta_t / k
+        w = min(1, 1 / (np.sqrt(lamb) * np.linalg.norm(w_half))) * w_half
+        train_obj.append(objective_function(Xtrain, ytrain, w, lamb))
 
     return w, train_obj
 
@@ -66,6 +72,8 @@ def pegasos_test(Xtest, ytest, w, t = 0.):
     """
     # you need to fill in your solution here
 
+    N = len(ytest)
+    test_acc = np.sum(((np.array(ytest).reshape(N, 1) * np.matmul(np.asarray(Xtest), w)) >= t).astype(int)) / N
 
     return test_acc
 

@@ -68,31 +68,62 @@ class TreeNode(object):
 			branches: C x B array, 
 					  C is the number of classes,
 					  B is the number of branches
-					  it stores the number of 
+					  it stores the number of
+					  corresponding training samples
 			'''
 			########################################################
 			# TODO: compute the conditional entropy
 			########################################################
-			
-		
-		for idx_dim in range(len(features[0])):
+
+			branches = np.asarray(branches)
+			B = branches.shape[1]
+			tot_samples = np.sum(branches)
+			cond_entropy = 0
+			for b in range(B):
+				samples = np.sum(branches[:, b])
+				probabilities = branches[:, b] / samples
+				entropies = -probabilities[probabilities.nonzero()] * np.log2(probabilities[probabilities.nonzero()])
+				cond_entropy += samples / tot_samples * np.sum(entropies)
+			return cond_entropy
+
+
+		uniq_classes = np.unique(self.labels)
+		min_entropy = np.inf
+		for idx_dim in range(len(self.features[0])):
 		############################################################
 		# TODO: compare each split using conditional entropy
-		#       find the 
+		#       find the best split
 		############################################################
 
+			values = np.asarray(self.features)[:, idx_dim]
+			uniq_values = np.unique(values)
+			num_branch = uniq_values.size
+			branches = np.empty((self.num_cls, num_branch), dtype = np.int32)
 
+			for b in range(num_branch):
+				labels = np.array(self.labels)[(values == uniq_values[b]).nonzero()] # get corresponding labels
+				for c in range(self.num_cls):
+					branches[c, b] = np.sum((labels == uniq_classes[c]).astype(int))
 
+			if conditional_entropy(branches) < min_entropy:
+				min_entropy = conditional_entropy(branches)
+				self.dim_split = idx_dim
+				self.feature_uniq_split = uniq_values.tolist()
 
 		############################################################
 		# TODO: split the node, add child nodes
 		############################################################
 
-
-
+		for value in self.feature_uniq_split:
+			indices = (np.array(self.features)[:, self.dim_split] == value).nonzero()
+			features = np.delete(self.features, self.dim_split, 1)[indices].tolist()
+			labels = np.array(self.labels)[indices].tolist()
+			self.children.append(TreeNode(features, labels, np.unique(labels).size))
 
 		# split the child nodes
 		for child in self.children:
+			if len(child.features[0]) == 0:
+				child.splittable = False
 			if child.splittable:
 				child.split()
 
@@ -102,9 +133,8 @@ class TreeNode(object):
 		if self.splittable:
 			# print(feature)
 			idx_child = self.feature_uniq_split.index(feature[self.dim_split])
+			feature = feature[:self.dim_split] + feature[self.dim_split + 1:]
 			return self.children[idx_child].predict(feature)
 		else:
 			return self.cls_max
-
-
 
