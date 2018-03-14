@@ -30,7 +30,7 @@ class Boosting(Classifier):
 		predictions = np.zeros(len(features))
 		for beta, clf in zip(self.betas, self.clfs_picked):
 			predictions += beta * np.array(clf.predict(features))
-		return np.where(predictions >= 0, 1, -1).tolist()
+		return np.where(predictions > 0, 1, -1).tolist()
 
 
 class AdaBoost(Boosting):
