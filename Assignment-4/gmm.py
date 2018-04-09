@@ -48,8 +48,26 @@ class GMM():
             # - compute variance and pi_k
 
             # DONOT MODIFY CODE ABOVE THIS LINE
-            raise Exception(
-                'Implement initialization of variances, means, pi_k using k-means')
+            # raise Exception(
+            #     'Implement initialization of variances, means, pi_k using k-means')
+
+            kmeans = KMeans(self.n_cluster, self.max_iter, self.e)
+            centroids, memberships, _ = kmeans.fit(x)
+            self.means = centroids
+
+            cov = np.zeros((self.n_cluster, D, D))
+            for i in range(self.n_cluster):
+                cov_tmp = np.zeros((D, D))
+                for j in (x[memberships == i] - centroids[i]):
+                    cov_tmp += np.matmul(j.reshape((D,1)), j.reshape((D,1)).T)
+                cov[i] = cov_tmp / len(x[memberships == i])
+            self.variances = cov
+
+            pi = np.zeros(self.n_cluster)
+            for i in range(self.n_cluster):
+                pi[i] = len(x[memberships == i]) / N
+            self.pi_k = pi
+
             # DONOT MODIFY CODE BELOW THIS LINE
 
         elif (self.init == 'random'):
@@ -59,8 +77,16 @@ class GMM():
             # - compute variance and pi_k
 
             # DONOT MODIFY CODE ABOVE THIS LINE
-            raise Exception(
-                'Implement initialization of variances, means, pi_k randomly')
+            # raise Exception(
+            #     'Implement initialization of variances, means, pi_k randomly')
+
+            self.means = np.random.randint(1001, size=(self.n_cluster, D)) / 1000
+            cov = np.zeros((self.n_cluster, D, D))
+            for i in range(self.n_cluster):
+                cov[i] = np.eye(D)
+            self.variances = cov
+            self.pi_k = np.repeart(1/self.n_cluster, self.n_cluster)
+
             # DONOT MODIFY CODE BELOW THIS LINE
 
         else:
@@ -73,8 +99,48 @@ class GMM():
         # Hint: Try to seperate E & M step for clarity
 
         # DONOT MODIFY CODE ABOVE THIS LINE
-        raise Exception('Implement fit function (filename: gmm.py)')
+        # raise Exception('Implement fit function (filename: gmm.py)')
+
+        gmm = np.zeros((N, self.n_cluster))
+        for i, point in enumerate(x):
+            for k in range(self.n_cluster):
+                gmm[i, k] = self.pi_k[k] * (
+                    1 / np.sqrt(np.power(2 * np.pi, D) * np.linalg.det(self.variances[k]))) * np.exp(
+                    -1 / 2 * np.matmul(np.matmul((point - self.means[k]).T, np.linalg.inv(self.variances[k])),
+                                       point - self.means[k]))
+                gmm[i,k] = self.pi_k[k] * (1 / np.sqrt(np.power(2 * np.pi, D) * np.linalg.det(self.variances[k]))) * \
+                           np.exp(-1 / 2 * np.matmul(np.matmul((point - self.means[k]).T, np.linalg.inv(self.variances[k])), point - self.means[k]))
+        p_x = np.sum(gmm, axis=1)
+        l = np.sum(np.log(p_x))
+
+        # raise Exception('Implement fit function (filename: gmm.py)')
+
+        for itr in range(self.max_iter):
+            # E step
+            garmma = gmm / p_x.reshape((N,1))
+            # M step
+            for k in range(self.n_cluster):
+                self.means[k] = np.sum(garmma[:,k].reshape(N, 1) * x) / np.sum(garmma[:,k])
+                cov_tmp = np.zeros((D, D))
+                for i in range(N):
+                    cov_tem = garmma[i, k] * np.matmul((x[i] - self.means[k]).reshape((2,1)), (x[i] - self.means[k]).reshape((2,1)).T)
+                self.variances[k] = cov_tmp / np.sum(garmma[:,k])
+                self.pi_k[k] = np.sum(garmma[:,k]) / N
+
+            for i, point in enumerate(x):
+                for k in range(self.n_cluster):
+                    while np.linalg.matrix_rank(self.variances[k]) != self.variances[k].shape[0]:
+                        self.variances[k] += np.eye(D) / 1000
+                    gmm[i, k] = self.pi_k[k] * (1 / np.sqrt(np.power(2 * np.pi, D) * np.linalg.det(self.variances[k]))) * \
+                                np.exp(-1 / 2 * np.matmul(np.matmul((point - self.means[k]).T, np.linalg.inv(self.variances[k])),point - self.means[k]))
+            p_x = np.sum(gmm, axis=1)
+            l_new = np.sum(np.log(p_x))
+            if abs(l - l_new) <= self.e:
+                break
+            l = l_new
+
         # DONOT MODIFY CODE BELOW THIS LINE
+
 
     def sample(self, N):
         '''

@@ -31,8 +31,22 @@ def transform_image(image, code_vectors):
     # - implement the function
 
     # DONOT CHANGE CODE ABOVE THIS LINE
-    raise Exception(
-        'Implement transform_image function (filename:kmeansTest.py')
+    # raise Exception(
+    #     'Implement transform_image function (filename:kmeansTest.py')
+
+    W, H, RGB = image.shape
+    distances = np.zeros((W, H, len(code_vectors)))
+    for id, code_vector in enumerate(code_vectors):
+        distances[:,:,id] = np.linalg.norm(image - code_vector, axis=2)
+
+    assignments = np.argmin(distances, axis=2)
+
+    new_image = np.empty((W, H, RGB))
+    for id, code_vector in enumerate(code_vectors):
+        new_image[assignments == id] = code_vector
+
+    return new_image
+
     # DONOT CHANGE CODE BELOW THIS LINE
 
 
@@ -101,7 +115,6 @@ def kmeans_image_compression():
 
     assert new_im.shape == im.shape, \
         'Shape of transformed image should be same as image'
-
     mse = np.sum((im - new_im)**2) / (N * M)
     print('Mean square error per pixel is {}'.format(mse))
     plt.imsave('plots/compressed_baboon.png', new_im)
