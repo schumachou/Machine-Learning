@@ -55,17 +55,17 @@ class GMM():
             centroids, memberships, _ = kmeans.fit(x)
             self.means = centroids
 
-            cov = np.zeros((self.n_cluster, D, D))
-            for i in range(self.n_cluster):
+            cov = np.empty((self.n_cluster, D, D))
+            for k in range(self.n_cluster):
                 cov_tmp = np.zeros((D, D))
-                for j in (x[memberships == i] - centroids[i]):
-                    cov_tmp += np.matmul(j.reshape((D,1)), j.reshape((D,1)).T)
-                cov[i] = cov_tmp / len(x[memberships == i])
+                for term in (x[memberships == k] - centroids[k]):
+                    cov_tmp += np.matmul(term.reshape((D,1)), term.reshape((D,1)).T)
+                cov[k] = cov_tmp / len(x[memberships == k])
             self.variances = cov
 
-            pi = np.zeros(self.n_cluster)
-            for i in range(self.n_cluster):
-                pi[i] = len(x[memberships == i]) / N
+            pi = np.empty(self.n_cluster)
+            for k in range(self.n_cluster):
+                pi[k] = len(x[memberships == k]) / N
             self.pi_k = pi
 
             # DONOT MODIFY CODE BELOW THIS LINE
@@ -80,12 +80,15 @@ class GMM():
             # raise Exception(
             #     'Implement initialization of variances, means, pi_k randomly')
 
-            self.means = np.random.randint(1001, size=(self.n_cluster, D)) / 1000
-            cov = np.zeros((self.n_cluster, D, D))
-            for i in range(self.n_cluster):
-                cov[i] = np.eye(D)
+            # self.means = np.random.randint(1001, size=(self.n_cluster, D)) / 1000
+            self.means = np.random.rand(self.n_cluster, D)
+
+            cov = np.empty((self.n_cluster, D, D))
+            for k in range(self.n_cluster):
+                cov[k] = np.eye(D)
             self.variances = cov
-            self.pi_k = np.repeart(1/self.n_cluster, self.n_cluster)
+
+            self.pi_k = np.repeat(1 / self.n_cluster, self.n_cluster)
 
             # DONOT MODIFY CODE BELOW THIS LINE
 
@@ -101,43 +104,48 @@ class GMM():
         # DONOT MODIFY CODE ABOVE THIS LINE
         # raise Exception('Implement fit function (filename: gmm.py)')
 
-        gmm = np.zeros((N, self.n_cluster))
-        for i, point in enumerate(x):
-            for k in range(self.n_cluster):
-                gmm[i, k] = self.pi_k[k] * (
-                    1 / np.sqrt(np.power(2 * np.pi, D) * np.linalg.det(self.variances[k]))) * np.exp(
-                    -1 / 2 * np.matmul(np.matmul((point - self.means[k]).T, np.linalg.inv(self.variances[k])),
-                                       point - self.means[k]))
-                gmm[i,k] = self.pi_k[k] * (1 / np.sqrt(np.power(2 * np.pi, D) * np.linalg.det(self.variances[k]))) * \
-                           np.exp(-1 / 2 * np.matmul(np.matmul((point - self.means[k]).T, np.linalg.inv(self.variances[k])), point - self.means[k]))
-        p_x = np.sum(gmm, axis=1)
-        l = np.sum(np.log(p_x))
 
-        # raise Exception('Implement fit function (filename: gmm.py)')
+
+        # p_x_z = np.zeros((N, self.n_cluster))
+        # for i, point in enumerate(x):
+        #     for k in range(self.n_cluster):
+        #         p_x_z[i,k] = self.pi_k[k] * (1 / np.sqrt(np.power(2 * np.pi, D) * np.linalg.det(self.variances[k]))) * \
+        #                    np.exp(-0.5 * np.matmul(np.matmul((point - self.means[k]).T, np.linalg.inv(self.variances[k])), point - self.means[k]))
+        # p_x = np.sum(p_x_z, axis=1)
+        # l = np.sum(np.log(p_x))
+
+        # raise Exception('********* DEBUG **********')
+
+        l = self.compute_log_likelihood(x)
 
         for itr in range(self.max_iter):
-            # E step
-            garmma = gmm / p_x.reshape((N,1))
-            # M step
-            for k in range(self.n_cluster):
-                self.means[k] = np.sum(garmma[:,k].reshape(N, 1) * x) / np.sum(garmma[:,k])
-                cov_tmp = np.zeros((D, D))
-                for i in range(N):
-                    cov_tem = garmma[i, k] * np.matmul((x[i] - self.means[k]).reshape((2,1)), (x[i] - self.means[k]).reshape((2,1)).T)
-                self.variances[k] = cov_tmp / np.sum(garmma[:,k])
-                self.pi_k[k] = np.sum(garmma[:,k]) / N
 
+            # E step
+            p_x_z = np.empty((N, self.n_cluster))
             for i, point in enumerate(x):
                 for k in range(self.n_cluster):
-                    while np.linalg.matrix_rank(self.variances[k]) != self.variances[k].shape[0]:
-                        self.variances[k] += np.eye(D) / 1000
-                    gmm[i, k] = self.pi_k[k] * (1 / np.sqrt(np.power(2 * np.pi, D) * np.linalg.det(self.variances[k]))) * \
-                                np.exp(-1 / 2 * np.matmul(np.matmul((point - self.means[k]).T, np.linalg.inv(self.variances[k])),point - self.means[k]))
-            p_x = np.sum(gmm, axis=1)
-            l_new = np.sum(np.log(p_x))
+                    p_x_z[i,k] = self.pi_k[k] * (1 / np.sqrt(np.power(2 * np.pi, D) * np.linalg.det(self.variances[k]))) * \
+                               np.exp(-0.5 * np.matmul(np.matmul((point - self.means[k]).T, np.linalg.inv(self.variances[k])), point - self.means[k]))
+
+            gamma = p_x_z / np.sum(p_x_z, axis=1).reshape((N,1))
+
+            # M step
+            for k in range(self.n_cluster):
+                self.means[k] = np.sum(gamma[:,k].reshape(N, 1) * x, axis=0) / np.sum(gamma[:,k])
+
+                cov_tmp = np.zeros((D, D))
+                for i in range(N):
+                    cov_tmp += gamma[i, k] * np.matmul((x[i] - self.means[k]).reshape((D,1)), (x[i] - self.means[k]).reshape((D,1)).T)
+                self.variances[k] = cov_tmp / np.sum(gamma[:,k])
+
+                self.pi_k[k] = np.sum(gamma[:,k]) / N
+
+            l_new = self.compute_log_likelihood(x)
             if abs(l - l_new) <= self.e:
                 break
             l = l_new
+
+        return itr + 1
 
         # DONOT MODIFY CODE BELOW THIS LINE
 
@@ -161,8 +169,17 @@ class GMM():
         # - return the samples
 
         # DONOT MODIFY CODE ABOVE THIS LINE
-        raise Exception('Implement sample function in gmm.py')
-        # DONOT MODIFY CODE BELOW THIS LINE
+        # raise Exception('Implement sample function in gmm.py')
+
+        samples = np.empty((N, self.means.shape[1]))
+        numbers = np.random.multinomial(N, self.pi_k)
+        pos = 0
+        for k, num in enumerate(numbers):
+            samples[pos:pos + num] = np.random.multivariate_normal(self.means[k], self.variances[k], num)
+            pos += num
+        return samples
+
+# DONOT MODIFY CODE BELOW THIS LINE
 
     def compute_log_likelihood(self, x):
         '''
@@ -178,5 +195,18 @@ class GMM():
         # - return the log-likelihood
         # Note: you can call this function in fit function (if required)
         # DONOT MODIFY CODE ABOVE THIS LINE
-        raise Exception('Implement compute_log_likelihood function in gmm.py')
+        # raise Exception('Implement compute_log_likelihood function in gmm.py')
+
+        N, D = x.shape
+        p_x_z = np.empty((N, self.n_cluster))
+        for i, point in enumerate(x):
+            for k in range(self.n_cluster):
+                while np.linalg.matrix_rank(self.variances[k]) != self.variances[k].shape[0]:
+                    self.variances[k] += 0.001 * np.eye(D)
+                p_x_z[i, k] = self.pi_k[k] * (1 / np.sqrt(np.power(2 * np.pi, D) * np.linalg.det(self.variances[k]))) \
+                              * np.exp(-0.5 * np.matmul(np.matmul((point - self.means[k]).T, np.linalg.inv(self.variances[k])),point - self.means[k]))
+
+        p_x = np.sum(p_x_z, axis=1)
+        return np.sum(np.log(p_x)).item()
+
         # DONOT MODIFY CODE BELOW THIS LINE

@@ -40,33 +40,38 @@ class KMeans():
         # raise Exception(
         #     'Implement fit function in KMeans class (filename: kmeans.py')
 
-        J = np.inf
-        means = x[np.random.randint(N, size=self.n_cluster)]
+        means = x[np.random.choice(N, size=self.n_cluster, replace=False)]
         distances = np.zeros((N, self.n_cluster))
+        r = None
+        J = np.inf
+        iteration = 0
 
         for i in range(self.max_iter):
 
             # assignment step
-            for id, mean in enumerate(means):
-                distances[:,id] = np.linalg.norm(x - mean, axis=1)
-            assignments = np.argmin(distances, axis=1)
+            for membership, mean in enumerate(means):
+                distances[:,membership] = np.linalg.norm(x - mean, axis=1)
+            r = np.argmin(distances, axis=1)
 
             # check for continuing
             J_new = 0
-            for id, mean in enumerate(means):
-                J_new += np.sum(np.linalg.norm((x[assignments == id] - mean), axis=1))
+            for membership, mean in enumerate(means):
+                J_new += np.sum(np.linalg.norm((x[r == membership] - mean), axis=1))
             J_new /= N
             if abs(J - J_new) <= self.e:
                 break
             J = J_new
 
             # update step
-            for id in range(self.n_cluster):
-                if len(x[assignments == id]) == 0:
+            for membership in range(self.n_cluster):
+                if len(x[r == membership]) == 0:
                     continue
-                means[id] = np.mean(x[assignments == id], axis=0)
+                # means[membership] = np.mean(x[r == membership], axis=0)
+                means[membership] = np.sum(x[r == membership], axis=0) / len(x[r == membership])
 
-        return (means, assignments, i + 1)
+            iteration = i + 1
+
+        return (means, r, iteration)
 
 
         # DONOT CHANGE CODE BELOW THIS LINE
@@ -121,11 +126,11 @@ class KMeansClassifier():
         centroids, memberships, _ = kmeans.fit(x)
 
         centroid_labels = np.empty((self.n_cluster))
-        for i in range(self.n_cluster):
-            if len(y[memberships == i]) == 0:
-                centroid_labels[i] == 0
+        for k in range(self.n_cluster):
+            if len(y[memberships == k]) == 0:
+                centroid_labels[k] == 0
                 continue
-            centroid_labels[i] = np.bincount(y[memberships == i]).argmax()
+            centroid_labels[k] = np.bincount(y[memberships == k]).argmax()
 
         # DONOT CHANGE CODE BELOW THIS LINE
 
