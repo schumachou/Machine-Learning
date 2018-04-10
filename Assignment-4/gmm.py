@@ -80,7 +80,6 @@ class GMM():
             # raise Exception(
             #     'Implement initialization of variances, means, pi_k randomly')
 
-            # self.means = np.random.randint(1001, size=(self.n_cluster, D)) / 1000
             self.means = np.random.rand(self.n_cluster, D)
 
             cov = np.empty((self.n_cluster, D, D))
@@ -103,18 +102,6 @@ class GMM():
 
         # DONOT MODIFY CODE ABOVE THIS LINE
         # raise Exception('Implement fit function (filename: gmm.py)')
-
-
-
-        # p_x_z = np.zeros((N, self.n_cluster))
-        # for i, point in enumerate(x):
-        #     for k in range(self.n_cluster):
-        #         p_x_z[i,k] = self.pi_k[k] * (1 / np.sqrt(np.power(2 * np.pi, D) * np.linalg.det(self.variances[k]))) * \
-        #                    np.exp(-0.5 * np.matmul(np.matmul((point - self.means[k]).T, np.linalg.inv(self.variances[k])), point - self.means[k]))
-        # p_x = np.sum(p_x_z, axis=1)
-        # l = np.sum(np.log(p_x))
-
-        # raise Exception('********* DEBUG **********')
 
         l = self.compute_log_likelihood(x)
 

@@ -53,7 +53,7 @@ class KMeans():
                 distances[:,membership] = np.linalg.norm(x - mean, axis=1)
             r = np.argmin(distances, axis=1)
 
-            # check for continuing
+            # check for distortion function
             J_new = 0
             for membership, mean in enumerate(means):
                 J_new += np.sum(np.linalg.norm((x[r == membership] - mean), axis=1))
@@ -66,13 +66,11 @@ class KMeans():
             for membership in range(self.n_cluster):
                 if len(x[r == membership]) == 0:
                     continue
-                # means[membership] = np.mean(x[r == membership], axis=0)
                 means[membership] = np.sum(x[r == membership], axis=0) / len(x[r == membership])
 
             iteration = i + 1
 
         return (means, r, iteration)
-
 
         # DONOT CHANGE CODE BELOW THIS LINE
 
