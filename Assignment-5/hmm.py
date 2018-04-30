@@ -21,6 +21,12 @@ def forward(pi, A, B, O):
   alpha = np.zeros([S, N])
   ###################################################
   # Q3.1 Edit here
+  alpha[:, 0] = pi * B[:, O[0]]
+  for n in range(1, N):
+    for s in range(S):
+      for i in range(S):
+        alpha[s, n] += A[i, s] * alpha[i, n-1]
+      alpha[s, n] *= B[s, O[n]]
   ###################################################
 
   return alpha
@@ -44,6 +50,11 @@ def backward(pi, A, B, O):
   beta = np.zeros([S, N])
   ###################################################
   # Q3.1 Edit here
+  beta[:, N-1] = 1
+  for n in range(N-2, -1, -1):
+    for s in range(S):
+      for j in range(S):
+        beta[s, n] += A[s, j] * B[j, O[n+1]] * beta[j, n+1]
   ###################################################
   
   return beta
@@ -61,6 +72,8 @@ def seqprob_forward(alpha):
   prob = 0
   ###################################################
   # Q3.2 Edit here
+  T = alpha.shape[1] - 1
+  prob = np.sum(alpha[:, T])
   ###################################################
   
   return prob
@@ -83,6 +96,7 @@ def seqprob_backward(beta, pi, B, O):
   prob = 0
   ###################################################
   # Q3.2 Edit here
+  prob = np.sum(beta[:, 0] * pi * B[:, 0])
   ###################################################
   
   return prob
@@ -104,8 +118,27 @@ def viterbi(pi, A, B, O):
   path = []
   ###################################################
   # Q3.3 Edit here
+  S = len(pi)
+  N = len(O)
+  delta = np.zeros((S, N))
+  best_path = np.zeros((S, N), dtype=int)
+
+  delta[:, 0] = pi * B[:, O[0]]
+  for n in range(1,N):
+    for s in range(S):
+      best_value = -np.inf
+      for i in range(S):
+        tmp_value = delta[i, n-1] * A[i, s] * B[s, O[n]]
+        if tmp_value > best_value:
+          best_value = tmp_value
+          best_path[s, n-1] = i
+      delta[s, n] = best_value
+
+  path.insert(0, np.argmax(delta[:, N-1], axis=0))
+  for n in range(N-1, 0, -1):
+    path.insert(0, best_path[path[0], n])
   ###################################################
-  
+
   return path
 
 

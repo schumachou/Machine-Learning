@@ -21,7 +21,10 @@ def pca(X = np.array([]), no_dims = 50):
     M = np.array([])
 
     """TODO: write your code here"""
-    
+    N = X.shape[0]
+    w, v = np.linalg.eig(np.matmul(X.T, X)/N)
+    M = v[:, 0:no_dims]
+    Y = np.matmul(X, M)
     return Y, M
 
 def decompress(Y = np.array([]), M = np.array([])):
@@ -42,7 +45,7 @@ def decompress(Y = np.array([]), M = np.array([])):
     X_hat = np.array([])
 
     """TODO: write your code here"""
-    
+    X_hat = np.matmul(Y, M.T)
     return X_hat
 
 def reconstruction_error(orig = np.array([]), decompressed = np.array([])):
@@ -56,7 +59,7 @@ def reconstruction_error(orig = np.array([]), decompressed = np.array([])):
     error = 0
 
     """TODO: write your code here"""
-    
+    error = np.mean((orig - decompressed)**2)
     return error
 
 def load_data(dataset='mnist_subset.json'):
