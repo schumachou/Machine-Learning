@@ -26,7 +26,7 @@ def pca(X = np.array([]), no_dims = 50):
 
     idx = np.argsort(w)[::-1]
     v = v[:, idx]
-    git
+
     M = v[:, 0:no_dims]
     Y = np.matmul(X, M)
     return Y, M
