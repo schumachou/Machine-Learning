@@ -23,6 +23,10 @@ def pca(X = np.array([]), no_dims = 50):
     """TODO: write your code here"""
     N = X.shape[0]
     w, v = np.linalg.eig(np.matmul(X.T, X)/N)
+
+    idx = np.argsort(w)[::-1]
+    v = v[:, idx]
+    git
     M = v[:, 0:no_dims]
     Y = np.matmul(X, M)
     return Y, M
